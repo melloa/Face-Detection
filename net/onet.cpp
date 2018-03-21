@@ -8,9 +8,9 @@ using std::string;
 
 void ONet::RetrieveOutput (std::vector<int>& shape, std::vector< std::vector <float>>& data){
         
-        Blob<float>* output_layer_score = GetNet()->output_blobs()[2];
-        Blob<float>* output_layer_points = GetNet()->output_blobs()[1];
-        Blob<float>* output_layer_mv = GetNet()->output_blobs()[0];
+        Blob* output_layer_score = GetNet()->output_blobs()[2];
+        Blob* output_layer_points = GetNet()->output_blobs()[1];
+        Blob* output_layer_mv = GetNet()->output_blobs()[0];
         
         const std::vector<int> shape_score = output_layer_score->shape();
         const std::vector<int> shape_points = output_layer_points->shape();
@@ -21,17 +21,17 @@ void ONet::RetrieveOutput (std::vector<int>& shape, std::vector< std::vector <fl
         shape.push_back(shape_score[1]);
         
         // Write output
-        const float* begin = output_layer_score->cpu_data();
+        const float* begin = output_layer_score->cpu_data<float>();
         const float*   end = begin + shape_score[0]*shape_score[1];
         
         vector<float> output_data_score(begin,end);
         
-        const float* pbegin = output_layer_points->cpu_data();
+        const float* pbegin = output_layer_points->cpu_data<float>();
         const float*   pend = pbegin + shape_points[0]*shape_points[1];
         
         vector<float> output_data_points(pbegin,pend);
         
-        const float* mbegin = output_layer_mv->cpu_data();
+        const float* mbegin = output_layer_mv->cpu_data<float>();
         const float*  mend = mbegin + shape_mv[0]*shape_mv[1];
         
         vector<float> output_data_mv(mbegin,mend);        
@@ -59,7 +59,7 @@ void ONet::PreProcessMatlab(std::vector <box> bounding_boxes, const string& imag
         myfile.close();
        
         // Shape Net Input
-        Blob<float>* input_layer = GetNet()->input_blobs()[0];
+        Blob* input_layer = GetNet()->input_blobs()[0];
         
         input_layer->Reshape(bounding_boxes.size(), 
                                 3,
@@ -73,7 +73,7 @@ void ONet::PreProcessMatlab(std::vector <box> bounding_boxes, const string& imag
         
         const std::vector<int> shape = input_layer->shape();
               
-        float* input_data = input_layer->mutable_cpu_data();
+        float* input_data = input_layer->mutable_cpu_data<float>();
         for (int i = 0; i < shape[0]*shape[1]; ++i) { // num * channels (boxes*3)
                 cv::Size size(shape[3],shape[2]); 
                 cv::Mat channel(size, CV_32FC1, input_data);
@@ -102,7 +102,7 @@ void ONet::PreProcessMatlab(std::vector <box> bounding_boxes, const string& imag
         ifstream myfile2; 
         myfile2.open ("matlab/imgout.txt");
         
-        float* pointertodata = GetNet()->input_blobs()[0]->mutable_cpu_data();
+        float* pointertodata = GetNet()->input_blobs()[0]->mutable_cpu_data<float>();
         float tmp;
         int i = 0;
         while (myfile2 >> tmp){
@@ -112,7 +112,7 @@ void ONet::PreProcessMatlab(std::vector <box> bounding_boxes, const string& imag
         myfile2.close();
         
         CHECK(reinterpret_cast<float*>(pointertodata)
-        == GetNet()->input_blobs()[0]->cpu_data())
+        == GetNet()->input_blobs()[0]->cpu_data<float>())
         << "Input channels are not wrapping the input layer of the network.";
         
         // delete files

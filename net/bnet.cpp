@@ -14,7 +14,7 @@ void RetrieveOutput     (const& std::vector<int> shape, std::vector< std::vector
 BNet::BNet(const string& model_file, const string& trained_file) {
 
         // Load the network
-        net.reset(new Net<float>(model_file, TEST));
+        net.reset(new Net(model_file, TEST));
         net->CopyTrainedLayersFrom(trained_file);
 
 }
@@ -34,7 +34,7 @@ void BNet::FeedInput (std::vector<cv::Mat>& imgs){
         }
        
         // Function Call
-        Blob<float>* input_layer = net->input_blobs()[0];
+        Blob* input_layer = net->input_blobs()[0];
         
         input_layer->Reshape(imgs.size(), 
                                 3,
@@ -51,11 +51,12 @@ void BNet::FeedInput (std::vector<cv::Mat>& imgs){
 }
 
 void BNet::WrapInputLayer(std::vector<cv::Mat>* input_channels) {
-        Blob<float>* input_layer = net->input_blobs()[0];
+        Blob* input_layer = net->input_blobs()[0];
 
         const std::vector<int> shape = input_layer->shape();
               
-        float* input_data = input_layer->mutable_cpu_data();
+        float* input_data = input_layer->mutable_cpu_data<float>();
+
         for (int i = 0; i < shape[0]*shape[1]; ++i) { // num * channels (boxes*3)
                 cv::Size size(shape[3],shape[2]); 
                 cv::Mat channel(size, CV_32FC1, input_data);
@@ -68,7 +69,7 @@ void BNet::PreProcess(std::vector<cv::Mat>* input_channels, // will be 3 times b
                       std::vector<cv::Mat>* imgs){
         
         vector<cv::Mat>* input_channels_org = input_channels;
-        Blob<float>* input_layer = net->input_blobs()[0];
+        Blob* input_layer = net->input_blobs()[0];
 
         const std::vector<int> shape = input_layer->shape();
         
@@ -101,7 +102,7 @@ void BNet::PreProcess(std::vector<cv::Mat>* input_channels, // will be 3 times b
         }
         
         CHECK(reinterpret_cast<float*>(input_channels_org->at(0).data)
-        == net->input_blobs()[0]->cpu_data())
+        == net->input_blobs()[0]->cpu_data<float>())
         << "Input channels are not wrapping the input layer of the network.";
         
 }
@@ -110,6 +111,6 @@ void BNet::Forward (void){
         net->Forward();
 }
 
-std::shared_ptr<Net<float> > BNet::GetNet (void){
+std::shared_ptr<Net> BNet::GetNet (void){
         return net;
 }
