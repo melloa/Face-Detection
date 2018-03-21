@@ -604,7 +604,7 @@ void Detector::onetWrapper(const cv::Mat& img){
         onet.RetrieveOutput(*shape_ptr, *output_data_ptr);
         
         // Print Image data!//
-        Blob<float>* input_layer = onet.GetNet()->input_blobs()[0];
+        Blob* input_layer = onet.GetNet()->input_blobs()[0];
         const std::vector<int> shape2 = input_layer->shape();
                 
         // Filter Boxes that are over threshold and collect mv output values as well
