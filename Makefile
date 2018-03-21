@@ -32,17 +32,17 @@ RM = rm -f
 #GccFLAGS = -fopenmp -O3 
 #MPIFLAGS = -Wno-deprecated
 
-CaffeLocation = /home/julian/Downloads/caffe
+CaffeLocation = /opt/caffe
 CaffeLIB = -L$(CaffeLocation)/build/lib
 CaffeINC = -I$(CaffeLocation)/include/
 
-NetLocation = /home/julian/HCC/Project/Codes/face-detection/net
+NetLocation = /workspace/Face-Detection/net
 NetLIB = -L$(NetLocation)
 
 GccFLAGS =  -pthread -std=c++11 -O3
 GccLibs = $(CaffeLIB) $(CaffeINC) $(NetLIB)
 
-GccLinkFLAGS = -lprotobuf -lglog `pkg-config opencv --cflags --libs` -lboost_system -lcaffe -lnet
+GccLinkFLAGS = -lprotobuf -lglog `pkg-config opencv --cflags --libs` -lboost_system -lcaffe-nv -lnet
 
 debug: GccFLAGS += -DDEBUG -g -Wall
 debug: all
