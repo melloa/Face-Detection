@@ -55,7 +55,7 @@ all: build
 build: $(TARGET)
 
 # Create executable
-$(TARGET): $(TARGET).cpp detector/detector.cpp net/libnet.so matlab/onetInput
+$(TARGET): $(TARGET).cpp detector/detector.cpp net/libnet.so #matlab/onetInput
 	$(GCC) $(GccLibs) -Wl,-rpath=$(NetLocation) $< detector/detector.cpp -o $@ $(GccFLAGS) $(GccLinkFLAGS)
 
 # Create Shared library for net objects
