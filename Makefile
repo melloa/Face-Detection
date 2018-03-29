@@ -35,11 +35,12 @@ RM = rm -f
 CaffeLocation = /opt/caffe
 CaffeLIB = -L$(CaffeLocation)/build/lib
 CaffeINC = -I$(CaffeLocation)/include/
+BlasLIB = -I/usr/local/cuda-9.0/targets/x86_64-linux/include/
 
 NetLocation = /workspace/Face-Detection/net
 NetLIB = -L$(NetLocation)
 
-GccFLAGS =  -pthread -std=c++11 -O3
+GccFLAGS =  -pthread -std=c++11 -O3 $(BlasLIB)
 GccLibs = $(CaffeLIB) $(CaffeINC) $(NetLIB)
 
 GccLinkFLAGS = -lprotobuf -lglog `pkg-config opencv --cflags --libs` -lboost_system -lcaffe-nv -lnet

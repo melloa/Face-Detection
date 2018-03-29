@@ -1,8 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define CPU_ONLY
-
 #include <caffe/caffe.hpp>
 
 #include <opencv2/core/core.hpp>
