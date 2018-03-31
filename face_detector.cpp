@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
         cv::imwrite(comm, outputImage);
         
         // Open window with detected objects
-        cv::namedWindow("Output Image", CV_WINDOW_AUTOSIZE);
-        cv::imshow("Output Image", outputImage);
-        cv::waitKey();
+        //cv::namedWindow("Output Image", CV_WINDOW_AUTOSIZE);
+        //cv::imshow("Output Image", outputImage);
+        //cv::waitKey();
 }
