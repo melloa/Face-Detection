@@ -316,6 +316,7 @@ void Detector::padBoundingBox(int imgHeight, int imgWidth){
 }
 
 void Detector::writeOutputImage(const cv::Mat& image) {
+        cout << "Number of landmarks: " << landmarks.size() << endl;
  
         image.copyTo(imageWithObjects);
         
@@ -589,10 +590,29 @@ void Detector::onetWrapper(const cv::Mat& img){
         cv::Size onet_input_geometry(48, 48);
         
         onet.SetInputGeometry(onet_input_geometry);
-        
-        // Matlab Call for correct input
-        onet.PreProcessMatlab (bounding_boxes, img_name);
-     
+                vector<cv::Mat> cropBoxes;
+
+        // Generate cropped images from the main image
+        for (unsigned int i = 0; i < bounding_boxes.size(); i++) {
+
+                cv::Rect rect =  cv::Rect(bounding_boxes[i].p1.x,
+                                                bounding_boxes[i].p1.y,
+                                                bounding_boxes[i].p2.x - bounding_boxes[i].p1.x, //width
+                                                bounding_boxes[i].p2.y - bounding_boxes[i].p1.y) //height
+                                                & cv::Rect(0, 0, processed_frame.cols, processed_frame.rows);
+
+                cv::Mat crop = cv::Mat(processed_frame, rect).clone();
+
+                // Resize the cropped Image
+                cv::Mat img_data;
+
+                cv::resize(crop, img_data, input_geometry);
+
+                cropBoxes.push_back(img_data);
+
+                img_data.release();
+        }
+        onet.FeedInput(cropBoxes);
         // Onet Forwar d data
         onet.Forward();
       

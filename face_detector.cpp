@@ -54,6 +54,8 @@ int main(int argc, char** argv) {
               cout << "Failed ..." << endl;
               return;
         }
+
+        
         stringstream ss;
         ss << "outputs/" << file ;
         string commS = ss.str();
