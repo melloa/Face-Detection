@@ -1,33 +1,4 @@
-/*
-Setup Info that is needed to run code.
-
-protoc src/caffe/proto/caffe.proto --cpp_out=.
-mkdir include/caffe/proto
-mv src/caffe/proto/caffe.pb.h include/caffe/proto
-
-sudo ln -s ~/Downloads/caffe/build/lib/libcaffe.so.1.0.0-rc3 \
-/usr/lib/x86_64-linux-gnu/libcaffe.so.1.0.0-rc3
-
-g++ -L/home/julian/Downloads/caffe/build/lib \
--I/home/julian/Downloads/caffe/include/ \
-face_detector.cpp detector.cpp -o test \
--lprotobuf -pthread -lglog `pkg-config opencv --cflags --libs` \
--lboost_system -lcaffe -std=c++11
-
-Before running Matlab from Caffe folder
-export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
-
-In Matlab:
-addpath ('./matlab')
-addpath('/usr/local/MATLAB/R2016b/toolbox/ptoolbox')
-addpath('/usr/local/MATLAB/R2016b/toolbox/ptoolbox/channels')
-
-g++ -I/home/julian/Downloads/caffe/include/ bnet.cpp -c -pthread -std=c++11
-
-*/
-
 #include <ctime>
-
 #include "config.h"
 #include "detector/detector.h"
 #include "net/bnet.h"
@@ -78,6 +49,11 @@ int main(int argc, char** argv) {
         // Print Output
         cout << "Execution time was: " << double(end-begin) / CLOCKS_PER_SEC << endl;
         
+        if(outputImage.empty())
+        {
+              cout << "Failed ..." << endl;
+              return;
+        }
         stringstream ss;
         ss << "outputs/" << file ;
         string commS = ss.str();
@@ -88,9 +64,4 @@ int main(int argc, char** argv) {
         const char* comm = commS.c_str();
         cout << "writing " << comm << endl;
         cv::imwrite(comm, outputImage);
-        
-        // Open window with detected objects
-        //cv::namedWindow("Output Image", CV_WINDOW_AUTOSIZE);
-        //cv::imshow("Output Image", outputImage);
-        //cv::waitKey();
 }
