@@ -637,7 +637,7 @@ void Detector::onetWrapper(Image& img){
                         points.LM.y = h*output_data[1][j*10+8] + img.bounding_boxes[j].p1.y;
                         points.RM.y = h*output_data[1][j*10+9] + img.bounding_boxes[j].p1.y;
                         
-                        landmarks.push_back(points);
+                        img.landmarks.push_back(points);
                 }
         }
         img.bounding_boxes.swap(chosen_boxes);
@@ -649,11 +649,11 @@ void Detector::onetWrapper(Image& img){
                 vector<landmark> chosen_points;
                 for (unsigned int j = 0; j < pick.size(); j++){
                         chosen_boxes.push_back(img.bounding_boxes[pick[j]]);
-                        chosen_points.push_back(landmarks[pick[j]]);
+                        chosen_points.push_back(img.landmarks[pick[j]]);
                 }
                 
                 img.bounding_boxes.swap(chosen_boxes);
-                landmarks.swap(chosen_points);
+                img.landmarks.swap(chosen_points);
                                         
                 vector<box> correct_box(img.bounding_boxes.size());
                 for (unsigned int j = 0; j < img.bounding_boxes.size(); j++){
