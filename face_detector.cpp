@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
         if(outputImage.empty())
         {
               cout << "Failed ..." << endl;
-              return;
+              return -1;
         }
 
         
@@ -66,4 +66,5 @@ int main(int argc, char** argv) {
         const char* comm = commS.c_str();
         cout << "writing " << comm << endl;
         cv::imwrite(comm, outputImage);
+        return 0;
 }

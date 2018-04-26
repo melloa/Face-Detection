@@ -10,7 +10,7 @@ using std::string;
 
 class Image {
   public:
-        Image(string fn, cv::Mat img)
+        Image(string fn)
         {
             filename = fn;
             image = cv::imread(fn, -1);
@@ -21,7 +21,7 @@ class Image {
             return image; 
         }
 
-        bool empty() { return img.empty(); }
+        bool empty() { return image.empty(); }
 
         void print() 
         {
@@ -30,9 +30,9 @@ class Image {
             for(int i = 0; i < bounding_boxes.size(); i++)
             {
                 cout << "\tBounding Box:" << endl
-                    << "\t\t" << bounding_boxes[i].P1 << endl
-                    << "\t\t" << bounding_boxes[i].P2 << endl
-                    << "\t\t" << bounding_boxes[i].Score << endl
+                    << "\t\t" << bounding_boxes[i].p1 << endl
+                    << "\t\t" << bounding_boxes[i].p2 << endl
+                    << "\t\t" << bounding_boxes[i].score << endl
                     << "\t\t" << bounding_boxes[i].dP1 << endl
                     << "\t\t" << bounding_boxes[i].dP1 << endl;
             }
@@ -53,6 +53,7 @@ class Image {
   
   private:
         cv::Mat image;
+        cv::Mat processed_image;
         string filename;
         
   private:

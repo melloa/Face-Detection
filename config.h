@@ -17,9 +17,9 @@
 #include <iostream>
 
 typedef struct {
-       cv::Point2f P1;
-       cv::Point2f P2;
-       float Score;
+       cv::Point2f p1;
+       cv::Point2f p2;
+       float score;
        cv::Point2f dP1;
        cv::Point2f dP2;
 } box;

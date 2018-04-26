@@ -46,9 +46,6 @@ Detector::Detector(const string& pnet_model_file,
         nms_thresholds[1] = 0.7;
         nms_thresholds[2] = 0.3;
         
-        // Setting image name
-        img.get()_name = image_name;
-        
 #ifdef CPU_ONLY
         Caffe::set_mode(Caffe::CPU);
 #else
@@ -57,31 +54,31 @@ Detector::Detector(const string& pnet_model_file,
 
 }
 
-const cv::Mat Detector::Detect(const cv::Mat& img.get()) {
+const cv::Mat Detector::Detect(Image& img) {
 
         // First Stage
         cout << "Running PNET" << endl;
-        pnetWrapper(img.get());
-        img.get().print();
+        pnetWrapper(img);
+        img.print();
         
         // Second Stage
-        if (img.get().img.bounding_boxes.size() > 0){
+        if (img.bounding_boxes.size() > 0){
                 cout << "Running RNET" << endl;
-                rnetWrapper(img.get());
-                img.get().print();
+                rnetWrapper(img);
+                img.print();
         }
         
         // Third Stage
-        if (img.get().img.bounding_boxes.size() > 0){
+        if (img.bounding_boxes.size() > 0){
                 cout << "Running ONET" << endl;
-                onetWrapper(img.get());
-                img.get().print();
+                onetWrapper(img);
+                img.print();
         }
                
         // Write final output to global variables
         cout << "Creating Output" << endl;
         writeOutputImage(img.get());
-        img.get().print();
+        img.print();
         
         return imageWithObjects;
 }
@@ -106,18 +103,18 @@ vector<int> Detector::nms (std::vector <box>total_boxes,
 
         // Initialize vectors
         for (unsigned int i = 0; i < total_boxes.size(); i++){
-                  x1[i] = total_boxes[i].P1.x;
-                  y1[i] = total_boxes[i].P1.y;
-                  x2[i] = total_boxes[i].P2.x;
-                  y2[i] = total_boxes[i].P2.y;
-                   s[i] = total_boxes[i].Score;
+                  x1[i] = total_boxes[i].p1.x;
+                  y1[i] = total_boxes[i].p1.y;
+                  x2[i] = total_boxes[i].p2.x;
+                  y2[i] = total_boxes[i].p2.y;
+                   s[i] = total_boxes[i].score;
                 area[i] = ((float)x2[i]-(float)x1[i]) * ((float)y2[i]-(float)y1[i]);
         }
 
         // Sort s and create indexes
         vector <int> I = ordered(s);
         // for (int i = 0; i < I.size(); i++){
-                // cout << I[i] << " " << total_boxes[I[i]].Score << endl;//" " << s[i] << endl;
+                // cout << I[i] << " " << total_boxes[I[i]].score << endl;//" " << s[i] << endl;
         // }
         while (I.size() > 0){
                 
@@ -187,11 +184,11 @@ vector<box> Detector::generateBoundingBox(std::vector< std::vector <float>> data
                                 cv::Point p2(floor((stride*x+cellsize-1+1)/scale),
                                              floor((stride*y+cellsize-1+1)/scale));
                                              
-                                temp_box.P1 = p1;
-                                temp_box.P2 = p2;
+                                temp_box.p1 = p1;
+                                temp_box.p2 = p2;
                                 
-                                // Score
-                                temp_box.Score = data[1][(shape_map[2] + y) * shape_map[3] + x];
+                                //.score
+                                temp_box.score = data[1][(shape_map[2] + y) * shape_map[3] + x];
                                 
                                 // Reg (dx1,dy1,dx2,dy2)
                                 cv::Point dp1 (data[0][(0*shape_map[2] + y) * shape_map[3] + x],
@@ -199,8 +196,8 @@ vector<box> Detector::generateBoundingBox(std::vector< std::vector <float>> data
                                 cv::Point dp2 (data[0][(2*shape_map[2] + y) * shape_map[3] + x],
                                                data[0][(3*shape_map[2] + y) * shape_map[3] + x]);
                                 
-                                temp_box.dP1 = dp1;
-                                temp_box.dP2 = dp2;
+                                temp_box.p1 = dp1;
+                                temp_box.p2 = dp2;
                                 
                                 // Add box to bounding boxes
                                 temp_boxes.push_back(temp_box);
@@ -211,14 +208,14 @@ vector<box> Detector::generateBoundingBox(std::vector< std::vector <float>> data
         return temp_boxes;
 }
 
-void Detector::printCurrentOutputs(const char* folder_name, const cv::Mat& image) {
+void Detector::printCurrentOutputs(const char* folder_name, Image& image) {
          
         // Generate cropped images from the main image        
-        for (unsigned int i = 0; i < img.bounding_boxes.size(); i++) {
-                cv::Rect rect =  cv::Rect(img.bounding_boxes[i].P1.x,
-                                          img.bounding_boxes[i].P1.y, 
-                                          img.bounding_boxes[i].P2.x - img.bounding_boxes[i].P1.x,  //width
-                                          img.bounding_boxes[i].P2.y - img.bounding_boxes[i].P1.y); //height
+        for (unsigned int i = 0; i < image.bounding_boxes.size(); i++) {
+                cv::Rect rect =  cv::Rect(image.bounding_boxes[i].p1.x,
+                                          image.bounding_boxes[i].p1.y, 
+                                          image.bounding_boxes[i].p2.x - image.bounding_boxes[i].p1.x,  //width
+                                          image.bounding_boxes[i].p2.y - image.bounding_boxes[i].p1.y); //height
                 cv::Mat crop = cv::Mat(image, rect).clone();
                 
                 
@@ -230,27 +227,27 @@ void Detector::printCurrentOutputs(const char* folder_name, const cv::Mat& image
         
                 if (folder_name == "ONET"){
                         cv::circle(crop, 
-                                landmarks[i].LE-img.bounding_boxes[i].P1,
+                                image.landmarks[i].LE-img.bounding_boxes[i].p1,
                                 thickness,
                                 cv::Scalar(255, 0, 0),
                                 -1);
                         cv::circle(crop, 
-                                landmarks[i].RE-img.bounding_boxes[i].P1,
+                                image.landmarks[i].RE-img.bounding_boxes[i].p1,
                                 thickness,
                                 cv::Scalar(255, 0, 0),
                                 -1);
                         cv::circle(crop, 
-                                landmarks[i].N-img.bounding_boxes[i].P1,
+                                image.landmarks[i].N-img.bounding_boxes[i].p1,
                                 thickness,
                                 cv::Scalar(0, 255, 0),
                                 -1);
                         cv::circle(crop, 
-                                landmarks[i].LM-img.bounding_boxes[i].P1,
+                                image.landmarks[i].LM-img.bounding_boxes[i].p1,
                                 thickness,
                                 cv::Scalar(0, 0, 255),
                                 -1);
                         cv::circle(crop, 
-                                landmarks[i].RM-img.bounding_boxes[i].P1,
+                                image.landmarks[i].RM-img.bounding_boxes[i].p1,
                                 thickness,
                                 cv::Scalar(0, 0, 255),
                                 -1);
@@ -263,7 +260,7 @@ void Detector::printCurrentOutputs(const char* folder_name, const cv::Mat& image
                 string name;// = "Res_";
                 string type = ".jpg";
 
-                ss << folder_name << "/" << name << img.bounding_boxes[i].Score << type;
+                ss << folder_name << "/" << name << img.bounding_boxes[i].score << type;
 
                 string filename = ss.str();
                 ss.str("");
@@ -273,37 +270,36 @@ void Detector::printCurrentOutputs(const char* folder_name, const cv::Mat& image
         }
 }
 
-void Detector::padBoundingBox(int img.get()Height, int img.get()Width){
+void Detector::padBoundingBox(int imgHeight, int imgWidth){
         
         for (unsigned int j = 0; j < img.bounding_boxes.size(); j++){
-                if (img.bounding_boxes[j].P2.x >= img.get()Width){ // P2.x > w
+                if (img.bounding_boxes[j].p2.x >= imgWidth){ //.p2.x > w
                         // shift box
-                        img.bounding_boxes[j].P1.x -= img.bounding_boxes[j].P2.x - img.get()Width;
-                        img.bounding_boxes[j].P2.x = img.get()Width - 1;
+                        img.bounding_boxes[j].p1.x -= img.bounding_boxes[j].p2.x - imgWidth;
+                        img.bounding_boxes[j].p2.x = imgWidth - 1;
                 }
                 
-                if (img.bounding_boxes[j].P2.y >= img.get()Height){ // P2.y > h
+                if (img.bounding_boxes[j].p2.y >= imgHeight){ //.p2.y > h
                         // shift box
-                        img.bounding_boxes[j].P1.y -= img.bounding_boxes[j].P2.y - img.get()Height;
-                        img.bounding_boxes[j].P2.y = img.get()Height - 1;
+                        img.bounding_boxes[j].p1.y -= img.bounding_boxes[j].p2.y - imgHeight;
+                        img.bounding_boxes[j].p2.y = imgHeight - 1;
                 }
                 
-                if (img.bounding_boxes[j].P1.x < 0){
+                if (img.bounding_boxes[j].p1.x < 0){
                         // shift box
-                        img.bounding_boxes[j].P2.x -= img.bounding_boxes[j].P1.x;
-                        img.bounding_boxes[j].P1.x = 0;
+                        img.bounding_boxes[j].p2.x -= img.bounding_boxes[j].p1.x;
+                        img.bounding_boxes[j].p1.x = 0;
                 }
                 
-                if (img.bounding_boxes[j].P1.y < 0){
+                if (img.bounding_boxes[j].p1.y < 0){
                         // shift box
-                        img.bounding_boxes[j].P2.y -= img.bounding_boxes[j].P1.y;
-                        img.bounding_boxes[j].P1.y = 0;
+                        img.bounding_boxes[j].p2.y -= img.bounding_boxes[j].p1.y;
+                        img.bounding_boxes[j].p1.y = 0;
                 }
         }
 }
 
-void Detector::writeOutputImage(const cv::Mat& image) {
-        cout << "Number of landmarks: " << landmarks.size() << endl;
+void Detector::writeOutputImage(Image& img) {
  
         image.copyTo(imageWithObjects);
         
@@ -315,41 +311,41 @@ void Detector::writeOutputImage(const cv::Mat& image) {
         
         for (unsigned int i = 0; i < img.bounding_boxes.size(); i++) {
                 cv::rectangle(imageWithObjects, 
-                        img.bounding_boxes[i].P1, 
-                        img.bounding_boxes[i].P2, 
+                        img.bounding_boxes[i].p1, 
+                        img.bounding_boxes[i].p2, 
                         cv::Scalar(255, 255, 255),
                         thickness);
         }
-        for (unsigned int i = 0; i < landmarks.size(); i++) {
+        for (unsigned int i = 0; i < img.landmarks.size(); i++) {
                 cv::circle(imageWithObjects, 
-                        landmarks[i].LE,
+                        img.landmarks[i].LE,
                         thickness,
                         cv::Scalar(255, 0, 0),
                         -1);
                 cv::circle(imageWithObjects, 
-                        landmarks[i].RE,
+                        img.landmarks[i].RE,
                         thickness,
                         cv::Scalar(255, 0, 0),
                         -1);
                 cv::circle(imageWithObjects, 
-                        landmarks[i].N,
+                        img.landmarks[i].N,
                         thickness,
                         cv::Scalar(0, 255, 0),
                         -1);
                 cv::circle(imageWithObjects, 
-                        landmarks[i].LM,
+                        img.landmarks[i].LM,
                         thickness,
                         cv::Scalar(0, 0, 255),
                         -1);
                 cv::circle(imageWithObjects, 
-                        landmarks[i].RM,
+                        img.landmarks[i].RM,
                         thickness,
                         cv::Scalar(0, 0, 255),
                         -1);
         }
 }
 
-void Detector::pnetWrapper(const Image& img)
+void Detector::pnetWrapper(Image& img)
 {        
         /*
                 Initialize INPUTS
@@ -431,29 +427,29 @@ void Detector::pnetWrapper(const Image& img)
                 
                 vector<box> correct_box(img.bounding_boxes.size());
                 for (unsigned int j = 0; j < img.bounding_boxes.size(); j++){
-                        float regw = img.bounding_boxes[j].P2.x-img.bounding_boxes[j].P1.x;
-                        float regh = img.bounding_boxes[j].P2.y-img.bounding_boxes[j].P1.y;
-                        correct_box[j].P1.x = img.bounding_boxes[j].P1.x + img.bounding_boxes[j].dP1.x*regw;
-                        correct_box[j].P1.y = img.bounding_boxes[j].P1.y + img.bounding_boxes[j].dP1.y*regh;
-                        correct_box[j].P2.x = img.bounding_boxes[j].P2.x + img.bounding_boxes[j].dP2.x*regw;
-                        correct_box[j].P2.y = img.bounding_boxes[j].P2.y + img.bounding_boxes[j].dP2.y*regh;
-                        correct_box[j].Score = img.bounding_boxes[j].Score;
+                        float regw = img.bounding_boxes[j].p2.x-img.bounding_boxes[j].p1.x;
+                        float regh = img.bounding_boxes[j].p2.y-img.bounding_boxes[j].p1.y;
+                        correct_box[j].p1.x = img.bounding_boxes[j].p1.x + img.bounding_boxes[j].dP1.x*regw;
+                        correct_box[j].p1.y = img.bounding_boxes[j].p1.y + img.bounding_boxes[j].dP1.y*regh;
+                        correct_box[j].p2.x = img.bounding_boxes[j].p2.x + img.bounding_boxes[j].dP2.x*regw;
+                        correct_box[j].p2.y = img.bounding_boxes[j].p2.y + img.bounding_boxes[j].dP2.y*regh;
+                        correct_box[j].score = img.bounding_boxes[j].score;
                         
                         // Convert Box to Square (REREQ)
-                        float h = correct_box[j].P2.y - correct_box[j].P1.y;
-                        float w = correct_box[j].P2.x - correct_box[j].P1.x;
+                        float h = correct_box[j].p2.y - correct_box[j].p1.y;
+                        float w = correct_box[j].p2.x - correct_box[j].p1.x;
                         float l = max(w, h);
                         
-                        correct_box[j].P1.x += w*0.5 - l*0.5;
-                        correct_box[j].P1.y += h*0.5 - l*0.5;
-                        correct_box[j].P2.x = correct_box[j].P1.x + l;
-                        correct_box[j].P2.y = correct_box[j].P1.y + l;
+                        correct_box[j].p1.x += w*0.5 - l*0.5;
+                        correct_box[j].p1.y += h*0.5 - l*0.5;
+                        correct_box[j].p2.x = correct_box[j].p1.x + l;
+                        correct_box[j].p2.y = correct_box[j].p1.y + l;
                         
                         // Fix value to int
-                        correct_box[j].P1.x = floor(correct_box[j].P1.x);
-                        correct_box[j].P1.y = floor(correct_box[j].P1.y);
-                        correct_box[j].P2.x = floor(correct_box[j].P2.x);
-                        correct_box[j].P2.y = floor(correct_box[j].P2.y);
+                        correct_box[j].p1.x = floor(correct_box[j].p1.x);
+                        correct_box[j].p1.y = floor(correct_box[j].p1.y);
+                        correct_box[j].p2.x = floor(correct_box[j].p2.x);
+                        correct_box[j].p2.y = floor(correct_box[j].p2.y);
                 }
                 
                 img.bounding_boxes.swap(correct_box);
@@ -464,7 +460,7 @@ void Detector::pnetWrapper(const Image& img)
         }
 }
 
-void Detector::rnetWrapper(const cv::Mat& img.get()){
+void Detector::rnetWrapper(Image& img){
         
         cv::Size rnet_input_geometry(24, 24);
         
@@ -476,10 +472,10 @@ void Detector::rnetWrapper(const cv::Mat& img.get()){
         // Generate cropped images from the main image        
         for (unsigned int i = 0; i < img.bounding_boxes.size(); i++) {
                 
-                cv::Rect rect =  cv::Rect(img.bounding_boxes[i].P1.x,
-                                          img.bounding_boxes[i].P1.y, 
-                                          img.bounding_boxes[i].P2.x - img.bounding_boxes[i].P1.x,  //width
-                                          img.bounding_boxes[i].P2.y - img.bounding_boxes[i].P1.y); //height
+                cv::Rect rect =  cv::Rect(img.bounding_boxes[i].p1.x,
+                                          img.bounding_boxes[i].p1.y, 
+                                          img.bounding_boxes[i].p2.x - img.bounding_boxes[i].p1.x,  //width
+                                          img.bounding_boxes[i].p2.y - img.bounding_boxes[i].p1.y); //height
         
                 cv::Mat crop = cv::Mat(img.get(), rect).clone();
                
@@ -509,11 +505,11 @@ void Detector::rnetWrapper(const cv::Mat& img.get()){
                 if (output_data[0][j*2+1] > thresholds[1]){
                         
                         // Saving mv output data in boxes extra information
-                        img.bounding_boxes[j].dP1.x = output_data[1][j*4+0];
-                        img.bounding_boxes[j].dP1.y = output_data[1][j*4+1];
-                        img.bounding_boxes[j].dP2.x = output_data[1][j*4+2];
-                        img.bounding_boxes[j].dP2.y = output_data[1][j*4+3];              
-                        img.bounding_boxes[j].Score = output_data[0][j*2+1];
+                        img.bounding_boxes[j].p1.x = output_data[1][j*4+0];
+                        img.bounding_boxes[j].p1.y = output_data[1][j*4+1];
+                        img.bounding_boxes[j].p2.x = output_data[1][j*4+2];
+                        img.bounding_boxes[j].p2.y = output_data[1][j*4+3];              
+                        img.bounding_boxes[j].score = output_data[0][j*2+1];
                         chosen_boxes.push_back(img.bounding_boxes[j]);
                 }
         }
@@ -533,29 +529,29 @@ void Detector::rnetWrapper(const cv::Mat& img.get()){
                 for (unsigned int j = 0; j < img.bounding_boxes.size(); j++){
                         
                         // Apply BBREG
-                        float regw = img.bounding_boxes[j].P2.x-img.bounding_boxes[j].P1.x;
-                        float regh = img.bounding_boxes[j].P2.y-img.bounding_boxes[j].P1.y;
-                        correct_box[j].P1.x = img.bounding_boxes[j].P1.x + img.bounding_boxes[j].dP1.x*regw;
-                        correct_box[j].P1.y = img.bounding_boxes[j].P1.y + img.bounding_boxes[j].dP1.y*regh;
-                        correct_box[j].P2.x = img.bounding_boxes[j].P2.x + img.bounding_boxes[j].dP2.x*regw;
-                        correct_box[j].P2.y = img.bounding_boxes[j].P2.y + img.bounding_boxes[j].dP2.y*regh;
-                        correct_box[j].Score = img.bounding_boxes[j].Score;
+                        float regw = img.bounding_boxes[j].p2.x-img.bounding_boxes[j].p1.x;
+                        float regh = img.bounding_boxes[j].p2.y-img.bounding_boxes[j].p1.y;
+                        correct_box[j].p1.x = img.bounding_boxes[j].p1.x + img.bounding_boxes[j].dP1.x*regw;
+                        correct_box[j].p1.y = img.bounding_boxes[j].p1.y + img.bounding_boxes[j].dP1.y*regh;
+                        correct_box[j].p2.x = img.bounding_boxes[j].p2.x + img.bounding_boxes[j].dP2.x*regw;
+                        correct_box[j].p2.y = img.bounding_boxes[j].p2.y + img.bounding_boxes[j].dP2.y*regh;
+                        correct_box[j].score = img.bounding_boxes[j].score;
                         
                         // Convert Box to Square (REREQ)
-                        float h = correct_box[j].P2.y - correct_box[j].P1.y;
-                        float w = correct_box[j].P2.x - correct_box[j].P1.x;
+                        float h = correct_box[j].p2.y - correct_box[j].p1.y;
+                        float w = correct_box[j].p2.x - correct_box[j].p1.x;
                         float l = max(w, h);
                         
-                        correct_box[j].P1.x += w*0.5 - l*0.5;
-                        correct_box[j].P1.y += h*0.5 - l*0.5;
-                        correct_box[j].P2.x = correct_box[j].P1.x + l;
-                        correct_box[j].P2.y = correct_box[j].P1.y + l;
+                        correct_box[j].p1.x += w*0.5 - l*0.5;
+                        correct_box[j].p1.y += h*0.5 - l*0.5;
+                        correct_box[j].p2.x = correct_box[j].p1.x + l;
+                        correct_box[j].p2.y = correct_box[j].p1.y + l;
                         
                         // Fix value to int
-                        correct_box[j].P1.x = floor(correct_box[j].P1.x);
-                        correct_box[j].P1.y = floor(correct_box[j].P1.y);
-                        correct_box[j].P2.x = floor(correct_box[j].P2.x);
-                        correct_box[j].P2.y = floor(correct_box[j].P2.y);
+                        correct_box[j].p1.x = floor(correct_box[j].p1.x);
+                        correct_box[j].p1.y = floor(correct_box[j].p1.y);
+                        correct_box[j].p2.x = floor(correct_box[j].p2.x);
+                        correct_box[j].p2.y = floor(correct_box[j].p2.y);
                 }
                 
                 img.bounding_boxes.swap(correct_box);
@@ -568,7 +564,7 @@ void Detector::rnetWrapper(const cv::Mat& img.get()){
         }
 }
 
-void Detector::onetWrapper(const cv::Mat& img.get()){
+void Detector::onetWrapper(Image& img){
         
         cv::Size onet_input_geometry(48, 48);
         
@@ -616,30 +612,30 @@ void Detector::onetWrapper(const cv::Mat& img.get()){
                 if (output_data[2][j*2+1] > thresholds[2]){
                         
                         // Saving mv output data in boxes extra information
-                        img.bounding_boxes[j].dP1.x = output_data[0][j*4+0];
-                        img.bounding_boxes[j].dP1.y = output_data[0][j*4+1];
-                        img.bounding_boxes[j].dP2.x = output_data[0][j*4+2];
-                        img.bounding_boxes[j].dP2.y = output_data[0][j*4+3];              
-                        img.bounding_boxes[j].Score = output_data[2][j*2+1];
+                        img.bounding_boxes[j].p1.x = output_data[0][j*4+0];
+                        img.bounding_boxes[j].p1.y = output_data[0][j*4+1];
+                        img.bounding_boxes[j].p2.x = output_data[0][j*4+2];
+                        img.bounding_boxes[j].p2.y = output_data[0][j*4+3];              
+                        img.bounding_boxes[j].score = output_data[2][j*2+1];
                         chosen_boxes.push_back(img.bounding_boxes[j]);
                         
                         // Create Points for box
                         landmark points;
                         
-                        float w = img.bounding_boxes[j].P2.x - img.bounding_boxes[j].P1.x;
-                        float h = img.bounding_boxes[j].P2.y - img.bounding_boxes[j].P1.y;
+                        float w = img.bounding_boxes[j].p2.x - img.bounding_boxes[j].p1.x;
+                        float h = img.bounding_boxes[j].p2.y - img.bounding_boxes[j].p1.y;
 
-                        points.LE.x = w*output_data[1][j*10+0] + img.bounding_boxes[j].P1.x;
-                        points.RE.x = w*output_data[1][j*10+1] + img.bounding_boxes[j].P1.x;
-                        points.N.x  = w*output_data[1][j*10+2] + img.bounding_boxes[j].P1.x;
-                        points.LM.x = w*output_data[1][j*10+3] + img.bounding_boxes[j].P1.x;
-                        points.RM.x = w*output_data[1][j*10+4] + img.bounding_boxes[j].P1.x;
+                        points.LE.x = w*output_data[1][j*10+0] + img.bounding_boxes[j].p1.x;
+                        points.RE.x = w*output_data[1][j*10+1] + img.bounding_boxes[j].p1.x;
+                        points.N.x  = w*output_data[1][j*10+2] + img.bounding_boxes[j].p1.x;
+                        points.LM.x = w*output_data[1][j*10+3] + img.bounding_boxes[j].p1.x;
+                        points.RM.x = w*output_data[1][j*10+4] + img.bounding_boxes[j].p1.x;
                         
-                        points.LE.y = h*output_data[1][j*10+5] + img.bounding_boxes[j].P1.y;
-                        points.RE.y = h*output_data[1][j*10+6] + img.bounding_boxes[j].P1.y;
-                        points.N.y  = h*output_data[1][j*10+7] + img.bounding_boxes[j].P1.y;
-                        points.LM.y = h*output_data[1][j*10+8] + img.bounding_boxes[j].P1.y;
-                        points.RM.y = h*output_data[1][j*10+9] + img.bounding_boxes[j].P1.y;
+                        points.LE.y = h*output_data[1][j*10+5] + img.bounding_boxes[j].p1.y;
+                        points.RE.y = h*output_data[1][j*10+6] + img.bounding_boxes[j].p1.y;
+                        points.N.y  = h*output_data[1][j*10+7] + img.bounding_boxes[j].p1.y;
+                        points.LM.y = h*output_data[1][j*10+8] + img.bounding_boxes[j].p1.y;
+                        points.RM.y = h*output_data[1][j*10+9] + img.bounding_boxes[j].p1.y;
                         
                         landmarks.push_back(points);
                 }
@@ -664,29 +660,29 @@ void Detector::onetWrapper(const cv::Mat& img.get()){
                         
                         // Apply BBREG
                 
-                        float regw = img.bounding_boxes[j].P2.x-img.bounding_boxes[j].P1.x;
-                        float regh = img.bounding_boxes[j].P2.y-img.bounding_boxes[j].P1.y;
-                        correct_box[j].P1.x = img.bounding_boxes[j].P1.x + img.bounding_boxes[j].dP1.x*regw;
-                        correct_box[j].P1.y = img.bounding_boxes[j].P1.y + img.bounding_boxes[j].dP1.y*regh;
-                        correct_box[j].P2.x = img.bounding_boxes[j].P2.x + img.bounding_boxes[j].dP2.x*regw;
-                        correct_box[j].P2.y = img.bounding_boxes[j].P2.y + img.bounding_boxes[j].dP2.y*regh;
-                        correct_box[j].Score = img.bounding_boxes[j].Score;
+                        float regw = img.bounding_boxes[j].p2.x-img.bounding_boxes[j].p1.x;
+                        float regh = img.bounding_boxes[j].p2.y-img.bounding_boxes[j].p1.y;
+                        correct_box[j].p1.x = img.bounding_boxes[j].p1.x + img.bounding_boxes[j].dP1.x*regw;
+                        correct_box[j].p1.y = img.bounding_boxes[j].p1.y + img.bounding_boxes[j].dP1.y*regh;
+                        correct_box[j].p2.x = img.bounding_boxes[j].p2.x + img.bounding_boxes[j].dP2.x*regw;
+                        correct_box[j].p2.y = img.bounding_boxes[j].p2.y + img.bounding_boxes[j].dP2.y*regh;
+                        correct_box[j].score = img.bounding_boxes[j].score;
                         
                         // Convert Box to Square (REREQ)
-                        float h = correct_box[j].P2.y - correct_box[j].P1.y;
-                        float w = correct_box[j].P2.x - correct_box[j].P1.x;
+                        float h = correct_box[j].p2.y - correct_box[j].p1.y;
+                        float w = correct_box[j].p2.x - correct_box[j].p1.x;
                         float l = max(w, h);
                         
-                        correct_box[j].P1.x += w*0.5 - l*0.5;
-                        correct_box[j].P1.y += h*0.5 - l*0.5;
-                        correct_box[j].P2.x = correct_box[j].P1.x + l;
-                        correct_box[j].P2.y = correct_box[j].P1.y + l;
+                        correct_box[j].p1.x += w*0.5 - l*0.5;
+                        correct_box[j].p1.y += h*0.5 - l*0.5;
+                        correct_box[j].p2.x = correct_box[j].p1.x + l;
+                        correct_box[j].p2.y = correct_box[j].p1.y + l;
                         
                         // Fix value to int
-                        correct_box[j].P1.x = floor(correct_box[j].P1.x);
-                        correct_box[j].P1.y = floor(correct_box[j].P1.y);
-                        correct_box[j].P2.x = floor(correct_box[j].P2.x);
-                        correct_box[j].P2.y = floor(correct_box[j].P2.y);
+                        correct_box[j].p1.x = floor(correct_box[j].p1.x);
+                        correct_box[j].p1.y = floor(correct_box[j].p1.y);
+                        correct_box[j].p2.x = floor(correct_box[j].p2.x);
+                        correct_box[j].p2.y = floor(correct_box[j].p2.y);
                 }
                 
                 img.bounding_boxes.swap(correct_box);
@@ -697,143 +693,4 @@ void Detector::onetWrapper(const cv::Mat& img.get()){
                 // Test
                 // cout << "Total bounding boxes passing " << img.bounding_boxes.size() << endl;
         }
-}
-
-void Detector::onetCreateInputTest(){
-        int array[][4] = {
-        {296	,95	,367	,166	},
-        {80	,18	,159	,98	},
-        {82	,17	,161	,96	},
-        {84	,22	,158	,97	},
-        {291	,89	,371	,169	},
-        {81	,18	,161	,99	},
-        {79	,10	,160	,91	},
-        {285	,90	,369	,174	},
-        {284	,90	,364	,170	},
-        {289	,91	,364	,165	},
-        {81	,14	,170	,103	},
-        {145	,273	,212	,340	},
-        {156	,289	,198	,331	}
-        };
-
-        img.bounding_boxes.clear();
-        for (int i = 0; i < 13; i++ ){
-                box b;
-                b.P1.x = array[i][0];
-                b.P1.y = array[i][1];
-                b.P2.x = array[i][2];
-                b.P2.y = array[i][3];
-                img.bounding_boxes.push_back(b);
-        }     
-}
-
-void Detector::rnetCreateInputTest(){
-        int array[][4] = {
-        { 88 , 21 , 161 , 94 },
-        { 98 , 28 , 158 , 88 },
-        { 297 , 96 , 360 , 158 },
-        { 297 , 95 , 372 , 171 },
-        { 81 , 20 , 167 , 107 },
-        { 292 , 90 , 380 , 178 },
-        { 300 , 102 , 370 , 171 },
-        { 107 , 36 , 155 , 84 },
-        { 299 , 110 , 341 , 152 },
-        { 311 , 100 , 368 , 157 },
-        { 253 , 75 , 283 , 104 },
-        { 89 , 25 , 154 , 90 },
-        { 145 , 273 , 219 , 348 },
-        { 166 , 310 , 188 , 332 },
-        { 266 , 321 , 297 , 351 },
-        { 178 , 286 , 201 , 309 },
-        { 162 , 302 , 194 , 334 },
-        { 306 , 98 , 356 , 149 },
-        { 84 , 40 , 148 , 104 },
-        { 248 , 39 , 271 , 61 },
-        { 332 , 116 , 354 , 138 },
-        { 299 , 122 , 321 , 144 },
-        { 313 , 128 , 338 , 153 },
-        { 307 , 90 , 372 , 155 },
-        { 171 , 279 , 212 , 321 },
-        { 256 , 78 , 280 , 102 },
-        { 91 , 24 , 158 , 91 },
-        { 103 , 27 , 159 , 83 },
-        { 301 , 105 , 360 , 164 },
-        { 168 , 273 , 222 , 327 },
-        { 312 , 128 , 345 , 161 },
-        { 246 , 55 , 297 , 106 },
-        { 270 , 41 , 400 , 170 },
-        { 293 , 103 , 339 , 149 },
-        { 123 , 49 , 155 , 81 },
-        { 102 , 62 , 147 , 107 },
-        { 318 , 102 , 364 , 148 },
-        { 150 , 269 , 212 , 331 },
-        { 331 , 113 , 362 , 145 },
-        { 223 , 34 , 302 , 113 },
-        { 80 , 24 , 164 , 107 },
-        { 296 , 111 , 327 , 141 },
-        { 73 , 38 , 94 , 59 },
-        { 230 , 41 , 273 , 83 },
-        { 90 , 43 , 139 , 91 },
-        { 225 , 36 , 281 , 93 },
-        { 299 , 116 , 321 , 138 },
-        { 176 , 283 , 209 , 316 },
-        { 95 , 45 , 118 , 68 },
-        { 300 , 119 , 332 , 150 },
-        { 276 , 14 , 296 , 34 },
-        { 319 , 137 , 345 , 164 },
-        { 76 , 16 , 167 , 107 },
-        { 103 , 73 , 138 , 108 },
-        { 330 , 187 , 348 , 206 },
-        { 229 , 43 , 259 , 73 },
-        { 288 , 40 , 416 , 168 },
-        { 90 , 26 , 140 , 76 },
-        { 105 , 114 , 123 , 132 },
-        { 317 , 137 , 349 , 169 },
-        { 107 , 70 , 143 , 107 },
-        { 308 , 109 , 352 , 153 },
-        { 243 , 35 , 272 , 64 },
-        { 245 , 85 , 287 , 128 },
-        { 157 , 272 , 197 , 313 },
-        { 272 , 9 , 301 , 38 },
-        { 163 , 277 , 193 , 307 },
-        { 92 , 50 , 128 , 86 },
-        { 212 , 15 , 240 , 43 },
-        { 245 , 41 , 273 , 68 },
-        { 130 , 50 , 154 , 74 },
-        { 326 , 188 , 344 , 207 },
-        { 94 , 35 , 157 , 98 },
-        { 255 , 66 , 296 , 107 },
-        { 327 , 115 , 349 , 137 },
-        { 190 , 25 , 406 , 241 },
-        { 287 , 34 , 307 , 54 },
-        { 269 , 310 , 290 , 332 },
-        { 126 , 75 , 152 , 100 },
-        { 289 , 54 , 392 , 156 },
-        { 248 , 278 , 277 , 307 },
-        { 183 , 285 , 207 , 309 },
-        { 179 , 262 , 262 , 345 },
-        { 235 , 58 , 257 , 81 },
-        { 162 , 306 , 186 , 330 },
-        { 298 , 107 , 322 , 131 },
-        { 190 , 15 , 209 , 35 },
-        { 168 , 281 , 199 , 312 },
-        { 157 , 307 , 187 , 337 },
-        { 77 , 36 , 99 , 59 },
-        { 220 , 57 , 241 , 79 },
-        { 325 , 164 , 347 , 186 },
-        { 221 , 43 , 261 , 83 },
-        { 331 , 107 , 372 , 148 },
-        { 344 , 109 , 366 , 131 },
-        { 295 , 103 , 328 , 136 }
-        };
-
-        img.bounding_boxes.clear();
-        for (int i = 0; i < 96; i++ ){
-                box b;
-                b.P1.x = array[i][0];
-                b.P1.y = array[i][1];
-                b.P2.x = array[i][2];
-                b.P2.y = array[i][3];
-                img.bounding_boxes.push_back(b);
-        }     
 }

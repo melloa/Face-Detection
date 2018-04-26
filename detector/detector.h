@@ -8,6 +8,7 @@
 #include "../net/pnet.h"
 #include "../net/rnet.h"
 #include "../net/onet.h"
+#include "image.h"
 
 using namespace std;
 using namespace caffe;
@@ -25,7 +26,7 @@ class Detector {
                    const string& image_name);
   
         // Main Function
-        const cv::Mat Detect(const cv::Mat& img);
+        const cv::Mat Detect(Image& img);
   
   private:
 
@@ -41,9 +42,9 @@ class Detector {
         void writeOutputImage           (const cv::Mat& image);
 
         // Net Wrapper Functions
-        void pnetWrapper (const cv::Mat& img);        
-        void rnetWrapper (const cv::Mat& img);        
-        void onetWrapper (const cv::Mat& img); 
+        void pnetWrapper (Image& img);        
+        void rnetWrapper (Image& img);        
+        void onetWrapper (Image& img); 
         
         // Debug functions    
         void printCurrentOutputs (const char* folder_name, const cv::Mat& image);
