@@ -54,13 +54,6 @@ class Detector {
         PNet pnet;
         RNet rnet;
         ONet onet;
-        
-        // Output results will be stored in these vectors
-        vector<box> bounding_boxes;
-        vector<landmark> landmarks;
-        
-        // Output Image with the objects
-        cv::Mat imageWithObjects;
        
         // Definitions 
         int minSize;
@@ -70,9 +63,6 @@ class Detector {
         // candidates. 1 for each NN.
         float thresholds[3];
         float nms_thresholds[3];
-        
-        // Image name
-        string img_name;
 };
 
 #endif

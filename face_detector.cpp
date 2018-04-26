@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
         std::cout << "---------- Face Detector for "
                   << file << " ----------" << std::endl;
 
-        cv::Mat img = cv::imread(file, -1);
+        Image img(file);
         CHECK(!img.empty()) << "Unable to decode image " << file;
 
         // Detect function
