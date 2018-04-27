@@ -347,6 +347,19 @@ void Detector::writeOutputImage(Image& img) {
 
 void Detector::pnetWrapper(Image& img)
 {        
+            // Preprocess Input image (Convert to Float, Normalize, change channels, transpose)
+        cv::Mat Matfloat;
+        img.frame.convertTo(Matfloat, CV_32FC3);
+
+        cv::Mat Normalized;
+        cv::normalize(Matfloat, Normalized, -1, 1, cv::NORM_MINMAX, -1);
+
+        if (Normalized.channels() == 3 || Normalized.channels() == 4 )
+        cv::cvtColor(Normalized, Normalized, cv::COLOR_BGR2RGB);
+        else if (Normalized.channels() == 1)
+        cv::cvtColor(Normalized, Normalized, cv::COLOR_GRAY2RGB);
+
+        img.processed_frame = Normalized.t();
         /*
                 Initialize INPUTS
         */
@@ -374,15 +387,15 @@ void Detector::pnetWrapper(Image& img)
                 // Create Scale Images
                 float scale = scales[j];
                 
-                cv::Size pnet_input_geometry (ceil(img.get().cols*scale), 
-                                              ceil(img.get().rows*scale));
+                cv::Size pnet_input_geometry (ceil(img.processed_image.cols*scale), 
+                                              ceil(img.processed_image.rows*scale));
                 pnet.SetInputGeometry(pnet_input_geometry);
                 
                 // Resize the Image
                 std::vector <cv::Mat> img_data;
                 
                 cv::Mat resized;
-                cv::resize(img.get(), resized, pnet_input_geometry);
+                cv::resize(img.processed_image, resized, pnet_input_geometry);
                 
                 img_data.push_back(resized);
                 
@@ -455,7 +468,7 @@ void Detector::pnetWrapper(Image& img)
                 img.bounding_boxes.swap(correct_box);
                 
                 // Pad generated boxes
-                padBoundingBox(img, img.get().rows, img.get().cols);
+                padBoundingBox(img, img.processed_image.rows, img.processed_image.cols);
                 
         }
 }
@@ -477,7 +490,7 @@ void Detector::rnetWrapper(Image& img){
                                           img.bounding_boxes[i].p2.x - img.bounding_boxes[i].p1.x,  //width
                                           img.bounding_boxes[i].p2.y - img.bounding_boxes[i].p1.y); //height
         
-                cv::Mat crop = cv::Mat(img.get(), rect).clone();
+                cv::Mat crop = cv::Mat(img.processed_image, rect).clone();
                
                 // Resize the cropped Image
                 cv::Mat img_data;
@@ -557,7 +570,7 @@ void Detector::rnetWrapper(Image& img){
                 img.bounding_boxes.swap(correct_box);
                 
                 // Pad generated boxes
-                padBoundingBox(img, img.get().rows, img.get().cols);
+                padBoundingBox(img, img.processed_image.rows, img.processed_image.cols);
                 
                 // Test
                 // cout << "Total bounding boxes passing " << img.bounding_boxes.size() << endl;
