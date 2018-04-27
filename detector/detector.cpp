@@ -37,7 +37,7 @@ Detector::Detector(const string& pnet_model_file,
 
         // Threshold to consider points as potential
         // candidates. 3 for the 3 nets.
-        thresholds[0] = 0.6;
+	thresholds[0] = 0.6;
         thresholds[1] = 0.6;
         thresholds[2] = 0.8;
         
@@ -45,7 +45,7 @@ Detector::Detector(const string& pnet_model_file,
         nms_thresholds[0] = 0.8;
         nms_thresholds[1] = 0.7;
         nms_thresholds[2] = 0.3;
-        
+
         // Setting image name
         img_name = image_name;
         
@@ -597,7 +597,32 @@ void Detector::onetWrapper(const cv::Mat& img){
         
         // Matlab Call for correct input
         //onet.PreProcessMatlab(bounding_boxes, img_name);
-     
+	// Vector of cropped images
+	vector<cv::Mat> cropBoxes;
+
+	// Generate cropped images from the main image
+	for (unsigned int i = 0; i < bounding_boxes.size(); i++) {
+		cv::Rect rect =  cv::Rect(bounding_boxes[i].P1.x,
+					bounding_boxes[i].P1.y,
+					bounding_boxes[i].P2.x - bounding_boxes[i].P1.x, //width
+					bounding_boxes[i].P2.y - bounding_boxes[i].P1.y) //height
+				 & cv::Rect(0, 0, img.cols, img.rows);
+
+				cv::Mat crop = cv::Mat(img, rect).clone();
+
+				// Resize the cropped Image
+				cv::Mat img_data;
+
+				cv::resize(crop, img_data, onet_input_geometry);
+
+				cropBoxes.push_back(img_data);
+
+				img_data.release();
+			}
+
+			// Onet Input Setup
+			onet.FeedInput(cropBoxes);    	
+	 
         // Onet Forwar d data
         onet.Forward();
       

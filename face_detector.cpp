@@ -44,9 +44,9 @@ int main(int argc, char** argv) {
         cv::Mat Matfloat;
         cv::Mat processed_frame;
         img.convertTo(Matfloat, CV_32FC3);
-
+	
         cv::Mat Normalized;
-        cv::normalize(Matfloat, Normalized, -1, 1, cv::NORM_MINMAX, -1);
+	cv::normalize(Matfloat, Normalized, -1, 1, cv::NORM_MINMAX, -1);
 
         if (Normalized.channels() == 3 || Normalized.channels() == 4 )
           cv::cvtColor(Normalized, Normalized, cv::COLOR_BGR2RGB);
@@ -57,7 +57,11 @@ int main(int argc, char** argv) {
 
         // Detect function
         clock_t begin = clock();
-        cv::Mat outputImage = detector.Detect(processed_frame);
+        cv::Mat outputImage = detector.Detect(img);
+        //outputImage = detector.Detect(Matfloat);
+        //outputImage = detector.Detect(Normalized);
+        //outputImage = detector.Detect(processed_frame);
+		
 
         clock_t end = clock();
         // Print Output
