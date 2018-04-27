@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
         img.convertTo(Matfloat, CV_32FC3);
 	
         cv::Mat Normalized;
-	Normalized = Matfloat.clone();
+	Normalized = Matfloat;
 //	cv::normalize(Matfloat, Normalized, -1, 1, cv::NORM_MINMAX, -1);
 
         if (Normalized.channels() == 3 || Normalized.channels() == 4 )

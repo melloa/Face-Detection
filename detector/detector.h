@@ -14,6 +14,7 @@ using namespace caffe;
 
 using std::string;
 
+
 class Detector {
   public:
         Detector(  const string& pnet_model_file,

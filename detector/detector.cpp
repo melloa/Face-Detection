@@ -52,7 +52,8 @@ Detector::Detector(const string& pnet_model_file,
 #ifdef CPU_ONLY
         Caffe::set_mode(Caffe::CPU);
 #else
-        Caffe::set_mode(Caffe::GPU);
+	Caffe::set_mode(Caffe::GPU);
+	Caffe::SetDevice(0);
 #endif
 
 }
@@ -234,7 +235,7 @@ void Detector::printCurrentOutputs(const char* folder_name, const cv::Mat& image
                                           bounding_boxes[i].P1.y, 
                                           bounding_boxes[i].P2.x - bounding_boxes[i].P1.x,  //width
                                           bounding_boxes[i].P2.y - bounding_boxes[i].P1.y); //height
-                cv::Mat crop = cv::Mat(image, rect).clone();
+                //cv::Mat crop = cv::Mat(image, rect).clone();
                 
                 int minl = min (image.rows, image.cols);
         
@@ -337,6 +338,27 @@ void Detector::writeOutputImage(const cv::Mat& image) {
                         cv::Scalar(255, 255, 255),
                         thickness);
         }
+
+/*
+//	for (unsigned int j = 0; j < landmarks.size(); j++){
+//      		// Create Points for box
+//      		landmark points;
+
+      		points = landmarks[j];
+
+      		landmarks[j].LE.x = points.LE.y;
+      		landmarks[j].RE.x = points.RE.y;
+      		landmarks[j].N.x  = points.N.y;
+      		landmarks[j].LM.x = points.LM.y;
+      		landmarks[j].RM.x = points.RM.y;
+
+      		landmarks[j].LE.y = points.LE.x;
+      		landmarks[j].RE.y = points.RE.x;
+     		landmarks[j].N.y  = points.N.x;
+      		landmarks[j].LM.y = points.LM.x;
+      		landmarks[j].RM.y = points.RM.x;
+    	}
+*/
         for (unsigned int i = 0; i < landmarks.size(); i++) {
                 cv::circle(imageWithObjects, 
                         landmarks[i].LE,

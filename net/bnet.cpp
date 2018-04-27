@@ -73,7 +73,8 @@ void BNet::PreProcess(std::vector<cv::Mat>* input_channels, // will be 3 times b
 
         const std::vector<int> shape = input_layer->shape();
         
-        vector<cv::Mat> sample_float (imgs->size());
+        cout << "IMGS SIZE: " << imgs->size() << endl;
+	vector<cv::Mat> sample_float (imgs->size());
 
         for (unsigned int i = 0; i < imgs->size(); i++){
                 
