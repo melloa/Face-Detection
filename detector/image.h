@@ -27,7 +27,7 @@ class Image {
         {
             cout << "Image - " << filename << endl;
                     
-            for(int i = 0; i < bounding_boxes.size(); i++)
+            for(unsigned int i = 0; i < bounding_boxes.size(); i++)
             {
                 cout << "\tBounding Box:" << endl
                     << "\t\t" << bounding_boxes[i].p1 << endl
@@ -37,7 +37,7 @@ class Image {
                     << "\t\t" << bounding_boxes[i].dP1 << endl;
             }
                     
-            for(int i = 0; i < landmarks.size(); i++)
+            for(unsigned int i = 0; i < landmarks.size(); i++)
             {
                 cout << "\tLandmarks:" << endl
                     << "\t\t" << landmarks[i].LE << endl

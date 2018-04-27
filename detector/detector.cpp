@@ -17,41 +17,31 @@ vector<int> ordered(vector<float> values) {
         GENERAL FUNCTIONS
         *****************
 */
-Detector::Detector(const string& pnet_model_file,
-                   const string& pnet_trained_file,
-                   const string& rnet_model_file,
-                   const string& rnet_trained_file,
-                   const string& onet_model_file,
-                   const string& onet_trained_file,
+Detector::Detector(const string& pnet_model_file, const string& pnet_trained_file,
+                   const string& rnet_model_file, const string& rnet_trained_file,
+                   const string& onet_model_file, const string& onet_trained_file,
                    const string& image_name) 
-                   :    pnet(pnet_model_file, 
-                        pnet_trained_file),
-                        rnet(rnet_model_file, 
-                        rnet_trained_file),
-                        onet(onet_model_file, 
-                        onet_trained_file) {
+                   :    pnet(pnet_model_file, pnet_trained_file),
+                        rnet(rnet_model_file, rnet_trained_file),
+                        onet(onet_model_file, onet_trained_file) 
+{
                            
         // Definitions 
         minSize = 20;
-         factor = 0.709;
+        factor = 0.709;
 
         // Threshold to consider points as potential
         // candidates. 3 for the 3 nets.
         thresholds[0] = 0.6;
-        thresholds[1] = 0.6;
-        thresholds[2] = 0.8;
+        thresholds[1] = 0.8;
+        thresholds[2] = 0.85;
         
         // Threshold to merge candidates
-        nms_thresholds[0] = 0.8;
-        nms_thresholds[1] = 0.7;
+        nms_thresholds[0] = 0.4;
+        nms_thresholds[1] = 0.4;
         nms_thresholds[2] = 0.3;
-        
-#ifdef CPU_ONLY
-        Caffe::set_mode(Caffe::CPU);
-#else
-        Caffe::set_mode(Caffe::GPU);
-#endif
 
+        Caffe::set_mode(Caffe::GPU);
 }
 
 const cv::Mat Detector::Detect(Image& img) {
@@ -347,19 +337,20 @@ void Detector::writeOutputImage(Image& img) {
 
 void Detector::pnetWrapper(Image& img)
 {        
+        Caffe::set_mode(Caffe::GPU);
             // Preprocess Input image (Convert to Float, Normalize, change channels, transpose)
-        cv::Mat Matfloat;
-        img.get().convertTo(Matfloat, CV_32FC3);
+        cv::Mat img_float;
+        img.get().convertTo(img_float, CV_32FC3);
 
-        cv::Mat Normalized;
-        cv::normalize(Matfloat, Normalized, -1, 1, cv::NORM_MINMAX, -1);
+        cv::Mat normalized_image;
+        cv::normalize(img_float, normalized_image, -1, 1, cv::NORM_MINMAX, -1);
 
-        if (Normalized.channels() == 3 || Normalized.channels() == 4 )
-                cv::cvtColor(Normalized, Normalized, cv::COLOR_BGR2RGB);
-        else if (Normalized.channels() == 1)
-                cv::cvtColor(Normalized, Normalized, cv::COLOR_GRAY2RGB);
+        if (normalized_image.channels() == 3 || normalized_image.channels() == 4 )
+                cv::cvtColor(normalized_image, normalized_image, cv::COLOR_BGR2RGB);
+        else if (normalized_image.channels() == 1)
+                cv::cvtColor(normalized_image, normalized_image, cv::COLOR_GRAY2RGB);
 
-        img.processed_image = Normalized.t();
+        img.processed_image = normalized_image.t();
         /*
                 Initialize INPUTS
         */
@@ -370,11 +361,9 @@ void Detector::pnetWrapper(Image& img)
 	// Create Scale Pyramid
 	std::vector<float> scales;
 
-	//while (minl >= PNET_CONV_SIZE && factor_count < PNET_MAX_SCALE_COUNT){
 	while (factor_count < PNET_MAX_SCALE_COUNT){
 		scales.push_back(m*pow(factor,factor_count));
-		//minl *= factor;
-		factor_count++;
+]		factor_count++;
 	} 
         
         for (unsigned int j = 0; j < scales.size(); j++){
