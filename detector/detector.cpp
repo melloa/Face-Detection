@@ -38,12 +38,12 @@ Detector::Detector(const string& pnet_model_file,
         // Threshold to consider points as potential
         // candidates. 3 for the 3 nets.
 	thresholds[0] = 0.6;
-        thresholds[1] = 0.6;
+        thresholds[1] = 0.4;
         thresholds[2] = 0.8;
         
         // Threshold to merge candidates
-        nms_thresholds[0] = 0.8;
-        nms_thresholds[1] = 0.7;
+        nms_thresholds[0] = 0.4;
+        nms_thresholds[1] = 0.4;
         nms_thresholds[2] = 0.3;
 
         // Setting image name
@@ -247,33 +247,33 @@ void Detector::printCurrentOutputs(const char* folder_name, const cv::Mat& image
                         bounding_boxes[i].P2, 
                         cv::Scalar(255, 255, 255),
                         thickness);  
-     
-//                        cv::circle(crop, 
-//                                landmarks[i].LE-bounding_boxes[i].P1,
-//                                thickness,
-//                                cv::Scalar(255, 0, 0),
-//                                -1);
-//                        cv::circle(crop, 
-//                                landmarks[i].RE-bounding_boxes[i].P1,
-//                                thickness,
-//                                cv::Scalar(255, 0, 0),
-//                                -1);
-//                        cv::circle(crop, 
-//                                landmarks[i].N-bounding_boxes[i].P1,
-//                                thickness,
-//                                cv::Scalar(0, 255, 0),
-//                                -1);
-//                        cv::circle(crop, 
-//                                landmarks[i].LM-bounding_boxes[i].P1,
-//                                thickness,
-//                                cv::Scalar(0, 0, 255),
-//                                -1);
-//                        cv::circle(crop, 
-//                                landmarks[i].RM-bounding_boxes[i].P1,
-//                                thickness,
-//                                cv::Scalar(0, 0, 255),
-//                                -1);
-                        
+		if (folder_name == "ONET") {     
+                        cv::circle(newImg, 
+                                landmarks[i].LE-bounding_boxes[i].P1,
+                                thickness,
+                                cv::Scalar(255, 0, 0),
+                                -1);
+                        cv::circle(newImg, 
+                                landmarks[i].RE-bounding_boxes[i].P1,
+                                thickness,
+                                cv::Scalar(255, 0, 0),
+                                -1);
+                        cv::circle(newImg, 
+                                landmarks[i].N-bounding_boxes[i].P1,
+                                thickness,
+                                cv::Scalar(0, 255, 0),
+                                -1);
+                        cv::circle(newImg, 
+                                landmarks[i].LM-bounding_boxes[i].P1,
+                                thickness,
+                                cv::Scalar(0, 0, 255),
+                                -1);
+                        cv::circle(newImg, 
+                                landmarks[i].RM-bounding_boxes[i].P1,
+                                thickness,
+                                cv::Scalar(0, 0, 255),
+                                -1);
+                }
                } 
                 // Save the image
                 stringstream ss;
