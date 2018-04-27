@@ -38,8 +38,8 @@ class Detector {
                                          std::vector<int> shape_map,
                                          float scale,
                                          float threshold);
-        void padBoundingBox             (int imgHeight, int imgWidth);
-        void writeOutputImage           (const cv::Mat& image);
+        void padBoundingBox             (Image img, int imgHeight, int imgWidth);
+        void writeOutputImage           (Image& image);
 
         // Net Wrapper Functions
         void pnetWrapper (Image& img);        
@@ -47,7 +47,7 @@ class Detector {
         void onetWrapper (Image& img); 
         
         // Debug functions    
-        void printCurrentOutputs (const char* folder_name, const cv::Mat& image);
+        void printCurrentOutputs (const char* folder_name, Image& image);
         void rnetCreateInputTest ();    
         void onetCreateInputTest ();
         

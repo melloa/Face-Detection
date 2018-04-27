@@ -77,10 +77,10 @@ const cv::Mat Detector::Detect(Image& img) {
                
         // Write final output to global variables
         cout << "Creating Output" << endl;
-        writeOutputImage(img.get());
+        writeOutputImage(img);
         img.print();
         
-        return imageWithObjects;
+        return img.processed_image;
 }
 
 vector<int> Detector::nms (std::vector <box>total_boxes, 
@@ -216,10 +216,10 @@ void Detector::printCurrentOutputs(const char* folder_name, Image& image) {
                                           image.bounding_boxes[i].p1.y, 
                                           image.bounding_boxes[i].p2.x - image.bounding_boxes[i].p1.x,  //width
                                           image.bounding_boxes[i].p2.y - image.bounding_boxes[i].p1.y); //height
-                cv::Mat crop = cv::Mat(image, rect).clone();
+                cv::Mat crop = cv::Mat(image.get(), rect).clone();
                 
                 
-                int minl = min (image.rows, image.cols);
+                int minl = min (image.get().rows, image.get().cols);
         
                 // Used so the thickness of the marks is based on the size
                 // of the image
@@ -227,27 +227,27 @@ void Detector::printCurrentOutputs(const char* folder_name, Image& image) {
         
                 if (folder_name == "ONET"){
                         cv::circle(crop, 
-                                image.landmarks[i].LE-img.bounding_boxes[i].p1,
+                                image.landmarks[i].LE-image.bounding_boxes[i].p1,
                                 thickness,
                                 cv::Scalar(255, 0, 0),
                                 -1);
                         cv::circle(crop, 
-                                image.landmarks[i].RE-img.bounding_boxes[i].p1,
+                                image.landmarks[i].RE-image.bounding_boxes[i].p1,
                                 thickness,
                                 cv::Scalar(255, 0, 0),
                                 -1);
                         cv::circle(crop, 
-                                image.landmarks[i].N-img.bounding_boxes[i].p1,
+                                image.landmarks[i].N-image.bounding_boxes[i].p1,
                                 thickness,
                                 cv::Scalar(0, 255, 0),
                                 -1);
                         cv::circle(crop, 
-                                image.landmarks[i].LM-img.bounding_boxes[i].p1,
+                                image.landmarks[i].LM-image.bounding_boxes[i].p1,
                                 thickness,
                                 cv::Scalar(0, 0, 255),
                                 -1);
                         cv::circle(crop, 
-                                image.landmarks[i].RM-img.bounding_boxes[i].p1,
+                                image.landmarks[i].RM-image.bounding_boxes[i].p1,
                                 thickness,
                                 cv::Scalar(0, 0, 255),
                                 -1);
@@ -260,7 +260,7 @@ void Detector::printCurrentOutputs(const char* folder_name, Image& image) {
                 string name;// = "Res_";
                 string type = ".jpg";
 
-                ss << folder_name << "/" << name << img.bounding_boxes[i].score << type;
+                ss << folder_name << "/" << name << image.bounding_boxes[i].score << type;
 
                 string filename = ss.str();
                 ss.str("");
@@ -270,7 +270,7 @@ void Detector::printCurrentOutputs(const char* folder_name, Image& image) {
         }
 }
 
-void Detector::padBoundingBox(int imgHeight, int imgWidth){
+void Detector::padBoundingBox(Image img, int imgHeight, int imgWidth){
         
         for (unsigned int j = 0; j < img.bounding_boxes.size(); j++){
                 if (img.bounding_boxes[j].p2.x >= imgWidth){ //.p2.x > w
@@ -301,43 +301,43 @@ void Detector::padBoundingBox(int imgHeight, int imgWidth){
 
 void Detector::writeOutputImage(Image& img) {
  
-        image.copyTo(imageWithObjects);
+        img.get().copyTo(img.processed_image);
         
-        int minl = min (image.rows, image.cols);
+        int minl = min (img.get().rows, img.get().cols);
         
         // Used so the thickness of the marks is based on the size
         // of the image
         int thickness = ceil((float) minl / 270.0);
         
         for (unsigned int i = 0; i < img.bounding_boxes.size(); i++) {
-                cv::rectangle(imageWithObjects, 
+                cv::rectangle(img.processed_image, 
                         img.bounding_boxes[i].p1, 
                         img.bounding_boxes[i].p2, 
                         cv::Scalar(255, 255, 255),
                         thickness);
         }
         for (unsigned int i = 0; i < img.landmarks.size(); i++) {
-                cv::circle(imageWithObjects, 
+                cv::circle(img.processed_image, 
                         img.landmarks[i].LE,
                         thickness,
                         cv::Scalar(255, 0, 0),
                         -1);
-                cv::circle(imageWithObjects, 
+                cv::circle(img.processed_image, 
                         img.landmarks[i].RE,
                         thickness,
                         cv::Scalar(255, 0, 0),
                         -1);
-                cv::circle(imageWithObjects, 
+                cv::circle(img.processed_image, 
                         img.landmarks[i].N,
                         thickness,
                         cv::Scalar(0, 255, 0),
                         -1);
-                cv::circle(imageWithObjects, 
+                cv::circle(img.processed_image, 
                         img.landmarks[i].LM,
                         thickness,
                         cv::Scalar(0, 0, 255),
                         -1);
-                cv::circle(imageWithObjects, 
+                cv::circle(img.processed_image, 
                         img.landmarks[i].RM,
                         thickness,
                         cv::Scalar(0, 0, 255),
@@ -351,7 +351,7 @@ void Detector::pnetWrapper(Image& img)
                 Initialize INPUTS
         */
         int factor_count = 0;        
-        float minl = min (img.get().get().rows, img.get().cols);
+        float minl = min (img.get().rows, img.get().cols);
         float m = 12.0 / (float) minSize;
 
         // Fixme: For performance
@@ -455,7 +455,7 @@ void Detector::pnetWrapper(Image& img)
                 img.bounding_boxes.swap(correct_box);
                 
                 // Pad generated boxes
-                padBoundingBox(img.get().rows, img.get().cols);
+                padBoundingBox(img, img.get().rows, img.get().cols);
                 
         }
 }
@@ -557,7 +557,7 @@ void Detector::rnetWrapper(Image& img){
                 img.bounding_boxes.swap(correct_box);
                 
                 // Pad generated boxes
-                padBoundingBox(img.get().rows, img.get().cols);
+                padBoundingBox(img, img.get().rows, img.get().cols);
                 
                 // Test
                 // cout << "Total bounding boxes passing " << img.bounding_boxes.size() << endl;
@@ -585,7 +585,7 @@ void Detector::onetWrapper(Image& img){
                 // Resize the cropped Image
                 cv::Mat img_data;
 
-                cv::resize(crop, img_data, input_geometry);
+                cv::resize(crop, img_data, onet_input_geometry);
 
                 cropBoxes.push_back(img_data);
 
@@ -688,7 +688,7 @@ void Detector::onetWrapper(Image& img){
                 img.bounding_boxes.swap(correct_box);
                 
                 // Pad generated boxes
-                padBoundingBox(img.get().rows, img.get().cols);
+                padBoundingBox(img, img.get().rows, img.get().cols);
                 
                 // Test
                 // cout << "Total bounding boxes passing " << img.bounding_boxes.size() << endl;

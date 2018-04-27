@@ -50,10 +50,10 @@ class Image {
 
         vector<box> bounding_boxes;
         vector<landmark> landmarks;
+        cv::Mat processed_image;
   
   private:
         cv::Mat image;
-        cv::Mat processed_image;
         string filename;
         
   private:
