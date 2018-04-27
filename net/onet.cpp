@@ -50,10 +50,10 @@ void ONet::PreProcessMatlab(std::vector <box> bounding_boxes, const string& imag
         myfile.open ("matlab/boxes.txt");
         
         for (unsigned int i = 0; i < bounding_boxes.size(); i++) {
-                myfile  << bounding_boxes[i].P1.x << " "
-                        << bounding_boxes[i].P1.y << " "
-                        << bounding_boxes[i].P2.x << " "
-                        << bounding_boxes[i].P2.y << endl;
+                myfile  << bounding_boxes[i].p1.x << " "
+                        << bounding_boxes[i].p1.y << " "
+                        << bounding_boxes[i].p2.x << " "
+                        << bounding_boxes[i].p2.y << endl;
         }
 
         myfile.close();

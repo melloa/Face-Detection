@@ -349,7 +349,7 @@ void Detector::pnetWrapper(Image& img)
 {        
             // Preprocess Input image (Convert to Float, Normalize, change channels, transpose)
         cv::Mat Matfloat;
-        img.frame.convertTo(Matfloat, CV_32FC3);
+        img.get().convertTo(Matfloat, CV_32FC3);
 
         cv::Mat Normalized;
         cv::normalize(Matfloat, Normalized, -1, 1, cv::NORM_MINMAX, -1);
@@ -359,7 +359,7 @@ void Detector::pnetWrapper(Image& img)
         else if (Normalized.channels() == 1)
         cv::cvtColor(Normalized, Normalized, cv::COLOR_GRAY2RGB);
 
-        img.processed_frame = Normalized.t();
+        img.processed_image = Normalized.t();
         /*
                 Initialize INPUTS
         */
