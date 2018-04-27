@@ -355,33 +355,27 @@ void Detector::pnetWrapper(Image& img)
         cv::normalize(Matfloat, Normalized, -1, 1, cv::NORM_MINMAX, -1);
 
         if (Normalized.channels() == 3 || Normalized.channels() == 4 )
-        cv::cvtColor(Normalized, Normalized, cv::COLOR_BGR2RGB);
+                cv::cvtColor(Normalized, Normalized, cv::COLOR_BGR2RGB);
         else if (Normalized.channels() == 1)
-        cv::cvtColor(Normalized, Normalized, cv::COLOR_GRAY2RGB);
+                cv::cvtColor(Normalized, Normalized, cv::COLOR_GRAY2RGB);
 
         img.processed_image = Normalized.t();
         /*
                 Initialize INPUTS
         */
-        int factor_count = 0;        
-        float minl = min (img.get().rows, img.get().cols);
-        float m = 12.0 / (float) minSize;
+        	// Set up PNET stage
+	int factor_count = 0;
+	float m = PNET_CONV_SIZE / (float) minSize;
 
-        // Fixme: For performance
-        // Further scale images to process image through NN efficiently 
-        // (When images are really big!!)
-        if (minl >= 1080) m = m * 1080 / (minl * 1.7);
-        
-        minl = minl*m;
-        
-        // Create Scale Pyramid
-        std::vector<float> scales;
-        
-        while (minl >= 12){
-                scales.push_back(m*pow(factor,factor_count));
-                minl *= factor;
-                factor_count++;
-        }
+	// Create Scale Pyramid
+	std::vector<float> scales;
+
+	//while (minl >= PNET_CONV_SIZE && factor_count < PNET_MAX_SCALE_COUNT){
+	while (factor_count < PNET_MAX_SCALE_COUNT){
+		scales.push_back(m*pow(factor,factor_count));
+		//minl *= factor;
+		factor_count++;
+	} 
         
         for (unsigned int j = 0; j < scales.size(); j++){
                 // Create Scale Images
