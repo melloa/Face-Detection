@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
         if(outputImage.empty())
         {
               cout << "Failed ..." << endl;
-              return;
+              return 1;
         }
         stringstream ss;
         ss << "outputs/" << file ;

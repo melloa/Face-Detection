@@ -64,7 +64,7 @@ const cv::Mat Detector::Detect(const cv::Mat& img) {
         pnetWrapper(img);
         
         // Debug
-        //printCurrentOutputs("PNET", img);
+        printCurrentOutputs("PNET", img);
         
         //Debug function
         // rnetCreateInputTest();
@@ -77,7 +77,7 @@ const cv::Mat Detector::Detect(const cv::Mat& img) {
         }
        
         // Debug
-        //printCurrentOutputs("RNET", img);
+        printCurrentOutputs("RNET", img);
         
         //Debug function
         //onetCreateInputTest();
@@ -90,7 +90,7 @@ const cv::Mat Detector::Detect(const cv::Mat& img) {
         }
        
         // Debug
-        // printCurrentOutputs("ONET", img);
+        printCurrentOutputs("ONET", img);
         
         // Write final output to global variables
         cout << "Creating Output" << endl;
@@ -227,63 +227,68 @@ vector<box> Detector::generateBoundingBox(std::vector< std::vector <float>> data
 void Detector::printCurrentOutputs(const char* folder_name, const cv::Mat& image) {
          
         // Generate cropped images from the main image        
-        for (unsigned int i = 0; i < bounding_boxes.size(); i++) {
+        cout << bounding_boxes.size() << " Bounding Boxes Found" << endl;
+	cv::Mat newImg = image.clone();
+	for (unsigned int i = 0; i < bounding_boxes.size(); i++) {
                 cv::Rect rect =  cv::Rect(bounding_boxes[i].P1.x,
                                           bounding_boxes[i].P1.y, 
                                           bounding_boxes[i].P2.x - bounding_boxes[i].P1.x,  //width
                                           bounding_boxes[i].P2.y - bounding_boxes[i].P1.y); //height
                 cv::Mat crop = cv::Mat(image, rect).clone();
                 
-                
                 int minl = min (image.rows, image.cols);
         
                 // Used so the thickness of the marks is based on the size
                 // of the image
                 int thickness = ceil((float) minl / 270.0);
-        
-                if (folder_name == "ONET"){
-                        cv::circle(crop, 
-                                landmarks[i].LE-bounding_boxes[i].P1,
-                                thickness,
-                                cv::Scalar(255, 0, 0),
-                                -1);
-                        cv::circle(crop, 
-                                landmarks[i].RE-bounding_boxes[i].P1,
-                                thickness,
-                                cv::Scalar(255, 0, 0),
-                                -1);
-                        cv::circle(crop, 
-                                landmarks[i].N-bounding_boxes[i].P1,
-                                thickness,
-                                cv::Scalar(0, 255, 0),
-                                -1);
-                        cv::circle(crop, 
-                                landmarks[i].LM-bounding_boxes[i].P1,
-                                thickness,
-                                cv::Scalar(0, 0, 255),
-                                -1);
-                        cv::circle(crop, 
-                                landmarks[i].RM-bounding_boxes[i].P1,
-                                thickness,
-                                cv::Scalar(0, 0, 255),
-                                -1);
+
+ 		cv::rectangle(newImg, 
+                        bounding_boxes[i].P1, 
+                        bounding_boxes[i].P2, 
+                        cv::Scalar(255, 255, 255),
+                        thickness);  
+     
+//                        cv::circle(crop, 
+//                                landmarks[i].LE-bounding_boxes[i].P1,
+//                                thickness,
+//                                cv::Scalar(255, 0, 0),
+//                                -1);
+//                        cv::circle(crop, 
+//                                landmarks[i].RE-bounding_boxes[i].P1,
+//                                thickness,
+//                                cv::Scalar(255, 0, 0),
+//                                -1);
+//                        cv::circle(crop, 
+//                                landmarks[i].N-bounding_boxes[i].P1,
+//                                thickness,
+//                                cv::Scalar(0, 255, 0),
+//                                -1);
+//                        cv::circle(crop, 
+//                                landmarks[i].LM-bounding_boxes[i].P1,
+//                                thickness,
+//                                cv::Scalar(0, 0, 255),
+//                                -1);
+//                        cv::circle(crop, 
+//                                landmarks[i].RM-bounding_boxes[i].P1,
+//                                thickness,
+//                                cv::Scalar(0, 0, 255),
+//                                -1);
                         
-                }
-                
+               } 
                 // Save the image
                 stringstream ss;
 
                 string name;// = "Res_";
                 string type = ".jpg";
 
-                ss << folder_name << "/" << name << bounding_boxes[i].Score << type;
+                ss << folder_name << type;
 
                 string filename = ss.str();
                 ss.str("");
 
-                cv::imwrite(filename, crop);
+                cv::imwrite(filename, newImg);
 
-        }
+        
 }
 
 void Detector::padBoundingBox(int imgHeight, int imgWidth){
@@ -591,7 +596,7 @@ void Detector::onetWrapper(const cv::Mat& img){
         onet.SetInputGeometry(onet_input_geometry);
         
         // Matlab Call for correct input
-        onet.PreProcessMatlab (bounding_boxes, img_name);
+        //onet.PreProcessMatlab(bounding_boxes, img_name);
      
         // Onet Forwar d data
         onet.Forward();

@@ -6,7 +6,7 @@ CaffeLIB = -L$(CaffeLocation)/build/lib
 CaffeINC = -I$(CaffeLocation)/include/
 BlasLIB = -I/usr/local/cuda-9.0/targets/x86_64-linux/include/
 OpenCVLib = -L/workspace/Face-Detection/opencv-3.4.1/build/modules/
-NetLocation = /workspace/Face-Detection/net
+NetLocation = ./net
 NetLIB = -L$(NetLocation)
 
 GccFLAGS =  -pthread -std=c++11 -O3 $(BlasLIB) $(OpenCVLib)
