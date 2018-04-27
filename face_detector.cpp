@@ -41,9 +41,23 @@ int main(int argc, char** argv) {
         cv::Mat img = cv::imread(file, -1);
         CHECK(!img.empty()) << "Unable to decode image " << file;
 
+        cv::Mat Matfloat;
+        cv::Mat processed_frame;
+        img.convertTo(Matfloat, CV_32FC3);
+
+        cv::Mat Normalized;
+        cv::normalize(Matfloat, Normalized, -1, 1, cv::NORM_MINMAX, -1);
+
+        if (Normalized.channels() == 3 || Normalized.channels() == 4 )
+          cv::cvtColor(Normalized, Normalized, cv::COLOR_BGR2RGB);
+        else if (Normalized.channels() == 1)
+          cv::cvtColor(Normalized, Normalized, cv::COLOR_GRAY2RGB);
+
+        processed_frame = Normalized.t();
+
         // Detect function
         clock_t begin = clock();
-        cv::Mat outputImage = detector.Detect(img);
+        cv::Mat outputImage = detector.Detect(processed_frame);
 
         clock_t end = clock();
         // Print Output
